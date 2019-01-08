@@ -25,20 +25,18 @@ plot_missings<-function(x){
 missPerc<-function(df){
 	colSums((is.na(df)/nrow(df))*100)
 	}
-	
-# the three functions below combined take a dataframe (with IDs as the first column), and create duplicate variables ending in _NA for each variable. (na_columns function)
-# once this has been done, the dataframe and a vector of values corresponding to missing data (e.g. 99, NA, etc.) are passed as arguments to the na_values function.
-# this function loops over each column ending in _NA, keeps the missing values, and changes everything else to NA. 
-# once this has been done, the same dataframe and vector of values are passed to the non_na_values function. 
-# this function loops over each column that doesn't end in _NA, keeps all the real values and changes all the missing values to NA. 
-# the purpose of these 3 functions is to facilitate data input into Nesstar, which won't accept categorical values along with interval data in the same variable, but also to assist with analysis.
-# now, analysis can be carried out on the original data without having to remove or overlook missing codes, or risk errors resulting from inadvertently including missing values in analysis as real values. 
-# if for any reason the missing values need to be analysed for any reason, they are in their own separate variables and can be easily selected and analysed without having to deal with real values. 
 
+### NA columns:	
+# na_columns() takes a dataframe (with IDs as the first column), and creates duplicate variables ending in _NA for each variable.
 
-# function to create extra columns:
+# na_columns_repl() creates duplicate variables ending in _NA, as na_columns() does, but has an extra argument
+# which takes a vector of values representing missing data codes, and removes these from the original columns
+# but keeps them in the new _NA columns.
+# The result is a data frame with a set of columns with true measured values (so can call e.g. mean, sd, etc on them)
+# and a set of columns which has the missing data codes (so can tabulate/analyze these if necessary).
+# Missing codes will not be inadvertently included as measured values and/or won't have to be explicitly filtered out every time.
 
-na_columns<-function(data, ...){
+na_columns<-function(data){
   
   for (indexCol in 2:ncol(data)){
     
@@ -49,13 +47,21 @@ na_columns<-function(data, ...){
     
   }
   
-  return(data)
+  data
   
-} 
+}
 
-# function to amend _NA column values:
 
-na_values<-function(data, values, ...){
+na_columns_repl<-function(data, values){
+  
+  for (indexCol in 2:ncol(data)){
+    
+    columnName<-colnames(data)[indexCol]
+    varname<-paste0(columnName, "_NA")
+    
+    data<-mutate(data, !!varname := data[[indexCol]])
+    
+  }
   
   for (indexCol in 1:ncol(data)){
     
@@ -66,12 +72,10 @@ na_values<-function(data, values, ...){
       
       if (!grepl(".+_NA", columnName)){
         
-        next
-        
-      } else {
-        
-        if(!(dataValue %in% values)){
+        if ((dataValue %in% values)){
+          
           data[indexRow,indexCol]<-NA
+          
         }
         
       }
@@ -79,14 +83,6 @@ na_values<-function(data, values, ...){
     }
     
   }
-  
-  return(data)
-}
-
-
-# function to amend non-_NA column values:
-
-non_na_values<-function(data, values, ...){
   
   for (indexCol in 1:ncol(data)){
     
@@ -97,19 +93,29 @@ non_na_values<-function(data, values, ...){
       
       if (grepl(".+_NA", columnName)){
         
-        next
-        
-      } else {
-        
-        if((dataValue %in% values)){
+        if (!(dataValue %in% values)){
+          
           data[indexRow,indexCol]<-NA
+          
         }
         
       }
       
     }
     
-  }
+  }  
   
-  return(data)
-}
+  data
+  
+} 
+
+# example (888 and 999 are codes for missing data - 888 = did not finish, 999 = not provided):
+
+df <- data.frame(id_no = c(1,2,3,4,5,6,7,8,9,10),
+                 age = c(45,32,44,23,47,999,45,999,50,38),
+                 score = c(23,24,26,30,888,999,999,999,30,28),
+                 score_2 = c(24,24,888,30,22,20,999,999,30,999))
+
+na_columns(df)
+
+na_columns_repl(df, c(888,999))
