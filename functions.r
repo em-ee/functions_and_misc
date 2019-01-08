@@ -1,4 +1,4 @@
-# this function shows a plot of all the missing (NA) data in a dataframe: ####
+# this function shows a plot of all the missing (NA) data in a dataframe: ----------
 
 library(ggplot2)
 library(reshape2)
@@ -20,13 +20,14 @@ plot_missings<-function(x){
 }
 
 
-# summary of missing data by column percentages: ####
+# summary of missing data by column percentages: -----------------------------------
 
 missPerc<-function(df){
 	colSums((is.na(df)/nrow(df))*100)
 	}
 
-### NA columns:	
+# NA columns:	----------------------------------------------------------------------
+
 # na_columns() takes a dataframe (with IDs as the first column), and creates duplicate variables ending in _NA for each variable.
 
 # na_columns_repl() creates duplicate variables ending in _NA, as na_columns() does, but has an extra argument
@@ -35,6 +36,8 @@ missPerc<-function(df){
 # The result is a data frame with a set of columns with true measured values (so can call e.g. mean, sd, etc on them)
 # and a set of columns which has the missing data codes (so can tabulate/analyze these if necessary).
 # Missing codes will not be inadvertently included as measured values and/or won't have to be explicitly filtered out every time.
+
+library(tidyverse)
 
 na_columns<-function(data){
   
