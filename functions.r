@@ -122,3 +122,4 @@ df <- data.frame(id_no = c(1,2,3,4,5,6,7,8,9,10),
 na_columns(df)
 
 na_columns_repl(df, c(888,999))
+na_columns_repl(df, c(23))
